@@ -201,7 +201,7 @@ func GenerateChain(config *params.ChainConfig, parent *types.Block, engine conse
 			println("chain-make")
 			println(chainreader)
 			println("header" + b.header.Root.String())
-			println(statedb)
+			println(string(statedb.Dump()))
 			println(b.txs)
 			println(b.uncles)
 			println(b.receipts)

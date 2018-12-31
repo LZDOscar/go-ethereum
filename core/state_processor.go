@@ -79,7 +79,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 	println("process-finalize")
 	println(p.bc)
 	println("header" + header.Root.String())
-	println(statedb)
+	println(string(statedb.Dump()))
 	println(block.Transactions())
 	println(block.Uncles())
 	println(receipts)
