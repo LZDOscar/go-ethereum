@@ -76,13 +76,13 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 		allLogs = append(allLogs, receipt.Logs...)
 	}
 	// Finalize the block, applying any consensus engine specific extras (e.g. block rewards)
-	println("process-finalize")
-	println(p.bc)
-	println("header" + header.Root.String())
-	println(string(statedb.Dump()))
-	println(block.Transactions())
-	println(block.Uncles())
-	println(receipts)
+	//println("process-finalize")
+	//println(p.bc)
+	//println("header" + header.Root.String())
+	//println(string(statedb.Dump()))
+	//println(block.Transactions())
+	//println(block.Uncles())
+	//println(receipts)
 	p.engine.Finalize(p.bc, header, statedb, block.Transactions(), block.Uncles(), receipts)
 
 	return receipts, allLogs, *usedGas, nil

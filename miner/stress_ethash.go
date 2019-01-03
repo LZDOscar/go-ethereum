@@ -105,7 +105,7 @@ func main() {
 		}
 	}
 	// Iterate over all the nodes and start signing with them
-	time.Sleep(10 * time.Second)
+	time.Sleep(3 * time.Second)
 	i := 0
 	for _, node := range nodes {
 		var ethereum *eth.Ethereum
@@ -125,7 +125,7 @@ func main() {
 			panic(err)
 		}
 	}
-	time.Sleep(1 * time.Second)
+	time.Sleep(3 * time.Second)
 	//
 	// Start injecting transactions from the faucets like crazy
 	nonces := make([]uint64, len(faucets))
@@ -203,7 +203,6 @@ func makeGenesis(faucets []*ecdsa.PrivateKey, mineraccs []common.Address) *core.
 
 		genesis.Alloc[crypto.PubkeyToAddress(faucet.PublicKey)] = core.GenesisAccount{
 			Balance: new(big.Int).Exp(big.NewInt(2), big.NewInt(128), nil),
-
 		}
 
 	}
