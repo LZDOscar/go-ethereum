@@ -79,7 +79,7 @@ func main() {
 		nodes  []*node.Node
 		enodes []*enode.Node
 	)
-	for i := 0; i < 5; i++ {
+	for i := 0; i < len(mineraccs); i++ {
 		// Start the node and wait until it's up
 		node, err := makeMiner(genesis)
 		if err != nil {
@@ -120,10 +120,18 @@ func main() {
 		//ethereum.SetRepContract()
 		//}
 
-		i++
-		if err := ethereum.StartMining(1); err != nil {
+		t := 1
+		if i == 0 {
+			t = 3
+		}
+		if i == 1 {
+			t = 2
+		}
+		if err := ethereum.StartMining(t); err != nil {
 			panic(err)
 		}
+
+		i++
 	}
 	time.Sleep(3 * time.Second)
 	//
@@ -203,6 +211,8 @@ func makeGenesis(faucets []*ecdsa.PrivateKey, mineraccs []common.Address) *core.
 
 		genesis.Alloc[crypto.PubkeyToAddress(faucet.PublicKey)] = core.GenesisAccount{
 			Balance: new(big.Int).Exp(big.NewInt(2), big.NewInt(128), nil),
+			//TODO
+
 		}
 
 	}
@@ -212,6 +222,8 @@ func makeGenesis(faucets []*ecdsa.PrivateKey, mineraccs []common.Address) *core.
 		if i < 8 {
 			genesis.Alloc[mineracc] = core.GenesisAccount{
 				Balance: new(big.Int).Exp(big.NewInt(2), big.NewInt(128), nil),
+				//TODO
+
 			}
 		}
 		//else{
