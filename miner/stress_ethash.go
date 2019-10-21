@@ -56,7 +56,7 @@ func main() {
 		common.HexToAddress("0000000000000000000000000000000000000002"),
 		common.HexToAddress("0000000000000000000000000000000000000003"),
 		common.HexToAddress("0000000000000000000000000000000000000004"),
-		common.HexToAddress("0000000000000000000000000000000000000005"),
+		//common.HexToAddress("0000000000000000000000000000000000000005"),
 		//common.HexToAddress("0000000000000000000000000000000000000006"),
 		//common.HexToAddress("0000000000000000000000000000000000000007"),
 		//common.HexToAddress("0000000000000000000000000000000000000008"),
@@ -124,9 +124,9 @@ func main() {
 		if i == 0 {
 			t = 3
 		}
-		if i == 1 {
-			t = 2
-		}
+		//if i == 1 {
+		//	t = 2
+		//}
 		if err := ethereum.StartMining(t); err != nil {
 			panic(err)
 		}
@@ -199,7 +199,8 @@ func main() {
 func makeGenesis(faucets []*ecdsa.PrivateKey, mineraccs []common.Address) *core.Genesis {
 	genesis := core.DefaultReputationnetGenesisBlock()
 	genesis.Difficulty = params.MinimumDifficulty
-	genesis.Difficulty = new(big.Int).SetInt64(1610720)
+	//genesis.Difficulty = new(big.Int).SetInt64(1610720)
+	genesis.Difficulty = new(big.Int).SetInt64(261072)
 	genesis.GasLimit = 25000000
 
 	genesis.Config.ChainID = big.NewInt(18)
