@@ -583,7 +583,10 @@ func (w *worker) resultLoop() {
 				continue
 			}
 			log.Info("Successfully sealed new block", "number", block.Number(), "sealhash", sealhash, "hash", hash,
-				"elapsed", common.PrettyDuration(time.Since(task.createdAt)), "miner", w.coinbase, "before mined reputation", w.current.state.GetReputation(w.coinbase))
+				"elapsed", common.PrettyDuration(time.Since(task.createdAt)), "miner", w.coinbase,
+				"before mined reputation", w.current.state.GetReputation(w.coinbase))
+				//"decay node reputation", w.current.state.GetReputation(common.HexToAddress("0000000000000000000000000000000000000002")))
+
 
 			// Broadcast the block and announce chain insertion event
 			w.mux.Post(core.NewMinedBlockEvent{Block: block})

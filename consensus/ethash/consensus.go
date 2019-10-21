@@ -21,7 +21,7 @@ import (
 	"errors"
 	"fmt"
 	mapset "github.com/deckarep/golang-set"
-	m "math"
+	math2 "math"
 	"math/big"
 	"runtime"
 	"time"
@@ -57,16 +57,19 @@ var (
 	ReputationLowThreshold              = uint64(0)
 	ReputationHighThreshold             = uint64(2000)
 	ReputationInit                      = uint64(1000)
-	ReputationFrontierBlockCount        = 20 //测试所用值，真实值要根据miner数量来定，大概为8×minerAccount
-	ReputationBlackBlockCount           = 40 //测试所用值，真实值要根据miner数量来定，大概为12×minerAccount
+	ReputationFrontierBlockCount        = 1  //测试所用值，真实值要根据miner数量来定，大概为8×minerAccount
+	ReputationBlackBlockCount           = 20 //测试所用值，真实值要根据miner数量来定，大概为12×minerAccount
 	ReputationRwardFormulaOptimizeParam = 100
 	ReputationDecayFormulaOptimizeParam = 30
-	ReputationCalcDiffBlockCount        = 10 // 测试所用值，真实值要根据miner数量来定，大概4×minerAccount
+	ReputationCalcDiffBlockCount        = 3 // 测试所用值，真实值要根据miner数量来定，大概4×minerAccount
 	ReputationWhiteAddress              = common.HexToAddress("0000000000000000000000000000000000000000")
 	ReputationExpectedRewardAccount     = 6
 	ReputationExpectedDecayAccount      = 2
 	ReputationDifficultyRadio           = uint64(1) // ReputationMax <=> Difficulty 最大信誉值可以转化为1/3的difficulty
-	ReputationContinuousBlockUsable     = float64(1.3)
+	ReputationContinuousBlockUsable     = float64(1.2)
+	alpha                               = 0.01
+	theta                               = 0.01
+	delta                               = 0.2
 	// calcDifficultyConstantinople is the difficulty adjustment algorithm for Constantinople.
 	// It returns the difficulty that a new block should have when created at time given the
 	// parent block's time and difficulty. The calculation uses the Byzantium rules, but with
@@ -82,11 +85,12 @@ var (
 
 	//临时测试所用的
 	ReputationContractAddress = common.Address{}
+	MinersBlackMapTest        = make(map[common.Address]int)
 	MinersListTest            = []common.Address{common.HexToAddress("0000000000000000000000000000000000000001"),
 		common.HexToAddress("0000000000000000000000000000000000000002"),
 		common.HexToAddress("0000000000000000000000000000000000000003"),
 		common.HexToAddress("0000000000000000000000000000000000000004"),
-		common.HexToAddress("0000000000000000000000000000000000000005"),
+		//common.HexToAddress("0000000000000000000000000000000000000005"),
 		//common.HexToAddress("0000000000000000000000000000000000000006"),
 		//common.HexToAddress("0000000000000000000000000000000000000007"),
 		//common.HexToAddress("0000000000000000000000000000000000000008"),
@@ -793,7 +797,7 @@ func (ethash *Ethash) verifySeal(chain consensus.ChainReader, header *types.Head
 		}
 	}
 	//竞争周期内出块数量与可用信誉度反比，指数递减，
-	reputation = uint64(float64(reputation) / (m.Pow(ReputationContinuousBlockUsable, float64(authorAccount))))
+	reputation = uint64(float64(reputation) / (math2.Pow(ReputationContinuousBlockUsable, float64(authorAccount))))
 	//target  := new(big.Int).Div(two256, header.Difficulty)
 	//reputation := ethash.state.
 	target := new(big.Int)
@@ -805,6 +809,7 @@ func (ethash *Ethash) verifySeal(chain consensus.ChainReader, header *types.Head
 	}
 	if reputation > ReputationInit {
 		tmp := new(big.Int).Mul(header.Difficulty, new(big.Int).SetUint64(reputation-ReputationInit))
+		//target = new(big.Int).Div(two256, new(big.Int).Sub(header.Difficulty, new(big.Int).Div(tmp, new(big.Int).SetUint64(ReputationInit*ReputationDifficultyRadio))))
 		target = new(big.Int).Div(two256, new(big.Int).Sub(header.Difficulty, new(big.Int).Div(tmp, new(big.Int).SetUint64(ReputationInit*ReputationDifficultyRadio))))
 	}
 	if reputation < ReputationInit {
@@ -933,19 +938,27 @@ func getReputationRewards(chain consensus.ChainReader, state *state.StateDB, hea
 	}
 
 	repCurrent := int(state.GetReputation(author))
-	repRadio := float64(repCurrent) / float64(ReputationHighThreshold)
-	expected := float64(0)
-	if ReputationCalcDiffBlockCount == 0 || ReputationFrontierBlockCount == 0 {
-		expected = 0
-	} else {
-		expected = float64(authorAcount*ReputationCalcDiffBlockCount) / (float64(ReputationFrontierBlockCount) * repRadio * float64(ReputationExpectedRewardAccount))
-	}
 
-	if expected > 1 {
-		expected = 1
-	}
-	//println(repCurrent)
-	repReward := float64(1-expected) * float64(int(ReputationHighThreshold)-repCurrent) / float64(ReputationRwardFormulaOptimizeParam)
+	//new version
+	//repReward := float64(1-float64(authorAcount)/float64(ReputationCalcDiffBlockCount))*float64(int(ReputationHighThreshold)-repCurrent)*alpha
+	//new version test-1 no punish and no reputation decay
+	authorAcount = 0
+	repReward := float64(1-float64(authorAcount)/float64(ReputationCalcDiffBlockCount)) * float64(int(ReputationHighThreshold)-repCurrent) * alpha
+
+	// old version
+	//repRadio := float64(repCurrent) / float64(ReputationHighThreshold)
+	//expected := float64(0)
+	//if ReputationCalcDiffBlockCount == 0 || ReputationFrontierBlockCount == 0 {
+	//	expected = 0
+	//} else {
+	//	expected = float64(authorAcount*ReputationCalcDiffBlockCount) / (float64(ReputationFrontierBlockCount) * repRadio * float64(ReputationExpectedRewardAccount))
+	//}
+	//
+	//if expected > 1 {
+	//	expected = 1
+	//}
+	////println(repCurrent)
+	//repReward := float64(1-expected) * float64(int(ReputationHighThreshold)-repCurrent) / float64(ReputationRwardFormulaOptimizeParam)
 	if repCurrent+int(repReward) > int(ReputationHighThreshold) {
 		return ReputationHighThreshold - uint64(repCurrent)
 	}
@@ -1031,26 +1044,49 @@ func reputationDecayTest(chain consensus.ChainReader, state *state.StateDB, head
 		mineraddr := parentHeader.Coinbase
 		minerList[mineraddr] += 1
 	}
-	for miner, mineraccount := range minerList {
-		repCurrent := int(state.GetReputation(miner))
-		repRadio := float64(repCurrent) / float64(ReputationHighThreshold)
-		expected := float64(0)
-		if ReputationCalcDiffBlockCount == 0 {
-			expected = 0
+	for miner, account := range minerList {
+		if account != 0 {
+			delete(MinersBlackMapTest, miner)
 		} else {
-			expected = float64(mineraccount*ReputationCalcDiffBlockCount) / (float64(ReputationBlackBlockCount) * repRadio * float64(ReputationExpectedDecayAccount))
+			tmp := MinersBlackMapTest[miner]
+			MinersBlackMapTest[miner] = tmp + 1
 		}
-		if expected > 1 {
-			expected = 1
-		}
-		repDecay := int((1 - expected) * float64(repCurrent) / float64(ReputationDecayFormulaOptimizeParam))
+	}
+
+	for miner, account := range MinersBlackMapTest {
+
+		repCurrent := int(state.GetReputation(miner))
+		//new version
+		repDecay := int((float64(repCurrent) - float64(ReputationLowThreshold)) * math2.Pow(2, float64(account)*delta) * theta)
+
 		if repCurrent < repDecay {
 			state.SubReputation(miner, uint64(repCurrent))
-			//TODO：加入黑名单！
 		} else {
 			state.SubReputation(miner, uint64(repDecay))
 		}
 	}
+	//for miner, mineraccount := range minerList {
+	//	repCurrent := int(state.GetReputation(miner))
+
+	//old version
+	//repRadio := float64(repCurrent) / float64(ReputationHighThreshold)
+	//expected := float64(0)
+	//if ReputationCalcDiffBlockCount == 0 {
+	//	expected = 0
+	//} else {
+	//	expected = float64(mineraccount*ReputationCalcDiffBlockCount) / (float64(ReputationBlackBlockCount) * repRadio * float64(ReputationExpectedDecayAccount))
+	//}
+	//if expected > 1 {
+	//	expected = 1
+	//}
+	//repDecay := int((1 - expected) * float64(repCurrent) / float64(ReputationDecayFormulaOptimizeParam))
+	//	if repCurrent < repDecay {
+	//		state.SubReputation(miner, uint64(repCurrent))
+	//		//TODO：加入黑名单！
+	//	} else {
+	//		state.SubReputation(miner, uint64(repDecay))
+	//	}
+	//}
 	return nil
 }
 
@@ -1145,9 +1181,9 @@ func accumulateRewards(chain consensus.ChainReader, state *state.StateDB, header
 	state.AddReputation(header.Coinbase, repReward)
 
 	//目前所用的是Test方法
-	if header.Number.Cmp(new(big.Int).SetInt64(0)) != 0 && ReputationBlackBlockCount != 0 && new(big.Int).Mod(header.Number, new(big.Int).SetInt64(int64(ReputationBlackBlockCount))).Int64() == 0 {
-		//println("decay------------------------------")
-		reputationDecayTest(chain, state, header)
-	}
+	//if header.Number.Cmp(new(big.Int).SetInt64(0)) != 0 && ReputationBlackBlockCount != 0 && new(big.Int).Mod(header.Number, new(big.Int).SetInt64(int64(ReputationBlackBlockCount))).Int64() == 0 {
+	//	//println("decay------------------------------")
+	//	reputationDecayTest(chain, state, header)
+	//}
 
 }

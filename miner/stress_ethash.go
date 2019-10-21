@@ -56,7 +56,7 @@ func main() {
 		common.HexToAddress("0000000000000000000000000000000000000002"),
 		common.HexToAddress("0000000000000000000000000000000000000003"),
 		common.HexToAddress("0000000000000000000000000000000000000004"),
-		common.HexToAddress("0000000000000000000000000000000000000005"),
+		//common.HexToAddress("0000000000000000000000000000000000000005"),
 		//common.HexToAddress("0000000000000000000000000000000000000006"),
 		//common.HexToAddress("0000000000000000000000000000000000000007"),
 		//common.HexToAddress("0000000000000000000000000000000000000008"),
@@ -122,12 +122,12 @@ func main() {
 
 
 		t := 1
-		if i == 0{
-			t = 3
-		}
-		if i == 1{
-			t = 2
-		}
+		//if i == 0{
+		//	t = 3
+		//}
+		//if i == 1{
+		//	t = 2
+		//}
 		if err := ethereum.StartMining(t); err != nil {
 			panic(err)
 		}
@@ -200,7 +200,10 @@ func main() {
 func makeGenesis(faucets []*ecdsa.PrivateKey, mineraccs []common.Address) *core.Genesis {
 	genesis := core.DefaultReputationnetGenesisBlock()
 	genesis.Difficulty = params.MinimumDifficulty
-	genesis.Difficulty = new(big.Int).SetInt64(1610720)
+	//genesis.Difficulty = new(big.Int).SetInt64(161072)
+	genesis.Difficulty = new(big.Int).SetInt64(261072)
+	//genesis.Difficulty = new(big.Int).SetInt64(1610720)
+
 	genesis.GasLimit = 25000000
 
 	genesis.Config.ChainID = big.NewInt(18)
@@ -220,13 +223,13 @@ func makeGenesis(faucets []*ecdsa.PrivateKey, mineraccs []common.Address) *core.
 	i := 0
 	for _, mineracc := range mineraccs {
 
-		if i < 8 {
-			genesis.Alloc[mineracc] = core.GenesisAccount{
-				Balance: new(big.Int).Exp(big.NewInt(2), big.NewInt(128), nil),
-				//TODO
-				Reputation: uint64(1000),
-			}
-		}
+		//if i < 8 {
+		//	genesis.Alloc[mineracc] = core.GenesisAccount{
+		//		Balance: new(big.Int).Exp(big.NewInt(2), big.NewInt(128), nil),
+		//		//TODO
+		//		Reputation: uint64(1000),
+		//	}
+		//}
 		//else{
 		//	genesis.Alloc[mineracc] = core.GenesisAccount{
 		//		Balance: new(big.Int).Exp(big.NewInt(2), big.NewInt(128), nil),
@@ -234,6 +237,35 @@ func makeGenesis(faucets []*ecdsa.PrivateKey, mineraccs []common.Address) *core.
 		//		Reputation: uint64(1000+(i-3)*200),
 		//	}
 		//}
+		if i == 0{
+				genesis.Alloc[mineracc] = core.GenesisAccount{
+					Balance: new(big.Int).Exp(big.NewInt(2), big.NewInt(128), nil),
+					//TODO
+					//Reputation: uint64(600),
+					Reputation: uint64(600),
+				}
+		}
+		if i == 1{
+			genesis.Alloc[mineracc] = core.GenesisAccount{
+				Balance: new(big.Int).Exp(big.NewInt(2), big.NewInt(128), nil),
+				//todo
+				Reputation: uint64(1000),
+			}
+		}
+		if i == 2{
+			genesis.Alloc[mineracc] = core.GenesisAccount{
+				Balance: new(big.Int).Exp(big.NewInt(2), big.NewInt(128), nil),
+				//todo
+				Reputation: uint64(1400),
+			}
+		}
+		if i == 3{
+			genesis.Alloc[mineracc] = core.GenesisAccount{
+				Balance: new(big.Int).Exp(big.NewInt(2), big.NewInt(128), nil),
+				//todo
+				Reputation: uint64(1800),
+			}
+		}
 
 		i++
 	}
